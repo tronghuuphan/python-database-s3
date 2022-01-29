@@ -4,11 +4,15 @@ from decouple import config
 import os
 
 from mysql.connector import MySQLConnection, Error
+from config import Config
+
+DB = Config('config.ini', 'mysql').parse()
+AWS = Config('config.ini', 'aws').parse()
 
 
-def upload_image_to_aws(local_file_name, remote_file_name, bucket=config('S3_BUCKET_NAME')):
+def upload_image_to_aws(local_file_name: str, remote_file_name: str, bucket: str = AWS['storage_bucket_name']) -> bool:
     s3 = boto3.client('s3',
-                      aws_access_key_id='AKIAQ57B5NVX2FCVMCZW', aws_secret_access_key='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')
+                      aws_access_key_id=AWS['access_key'], aws_secret_access_key=AWS['secret_access_key'])
 
     try:
         s3.upload_file(local_file_name, bucket, remote_file_name)
@@ -21,10 +25,8 @@ def upload_image_to_aws(local_file_name, remote_file_name, bucket=config('S3_BUC
         print('Credentials not available!')
         return False
 
-upload_image_to_aws('fake_data.sql','fake01.sql')
 
-
-def insert_log_database(student_id, camera_id, mask, date, time, image):
+def insert_log_database(student_id: int, camera_id: int, mask: int, date: str, time: str, image: str):
     """
     Insert a check-in person into databases using
     """
@@ -34,12 +36,7 @@ def insert_log_database(student_id, camera_id, mask, date, time, image):
     """
     args = (student_id, camera_id, mask, date, time, image)
     try:
-        conn = MySQLConnection(
-            host=config('DB_HOST'),
-            database=config('DB_NAME'),
-            user=config('DB_USER'),
-            password=config('DB_PASSWORD')
-        )
+        conn = MySQLConnection(**DB)
         cursor = conn.cursor()
         cursor.execute(query, args)
         conn.commit()
