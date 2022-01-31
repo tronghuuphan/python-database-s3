@@ -41,6 +41,8 @@ def insert_log_database(student_id: int, camera_id: int, mask: int, date: str, t
         cursor.execute(query, args)
         conn.commit()
 
+        upload_image_to_aws(image, image)
+
     except Error as e:
         print(e)
     finally:
