@@ -1,26 +1,40 @@
 import shutil
 import requests
+import os
 from mysql.connector import MySQLConnection, Error
 from config import Config
 
+# Get configuration data from config.ini file
 DB = Config('config.ini', 'mysql').parse()
+
+BASE_ROOT = os.getcwd()
+TRAIN_FOLDER = os.path.join(BASE_ROOT, 'train_images')
 
 
 def get_image_to_train():
+    # Create a training folder if it doesn't exist and change working directory to it
+    if not os.path.exists(TRAIN_FOLDER):
+        os.mkdir(TRAIN_FOLDER)
+    os.chdir(TRAIN_FOLDER)
+
+    # S3 URL
     url_prefix = 'https://nckh-2022.s3.ap-southeast-1.amazonaws.com/'
+
+    # Query student's data which wasn't trained
     query = """
     SELECT CCCD, image
     FROM Checkin_student
     WHERE trained=0
     """
-    data_loaded = []
+
+    data_loaded = []  # Array to store CCCD will be downloaded
     try:
         conn = MySQLConnection(**DB)
         cursor = conn.cursor(buffered=True)
         cursor.execute(query)
-
         row = cursor.fetchone()
 
+        # Download image from S3
         while row is not None:
             img_ext = row[1].split('.')[-1]
             img_name = '{}.{}'.format(row[0], img_ext)
@@ -35,7 +49,7 @@ def get_image_to_train():
                 print('Image saved to {}'.format(img_name))
             data_loaded.append(str(row[0]))
             row = cursor.fetchone()
-
+        # Update trained field status
         query_status = """
         UPDATE Checkin_student
         SET trained=1
@@ -51,3 +65,4 @@ def get_image_to_train():
     finally:
         cursor.close()
         conn.close()
+        os.chdir(BASE_ROOT)
