@@ -1,6 +1,5 @@
 import boto3
 from botocore.exceptions import NoCredentialsError
-from decouple import config
 import os
 
 from mysql.connector import MySQLConnection, Error
@@ -10,9 +9,8 @@ DB = Config('config.ini', 'mysql').parse()
 AWS = Config('config.ini', 'aws').parse()
 
 
-def upload_image_to_aws(local_file_name: str, remote_file_name: str, bucket: str = AWS['storage_bucket_name']) -> bool:
-    s3 = boto3.client('s3',
-                      aws_access_key_id=AWS['access_key'], aws_secret_access_key=AWS['secret_access_key'])
+def upload_image_to_aws(local_file_name: str, remote_file_name: str, bucket: str = AWS['bucket']) -> bool:
+    s3 = boto3.client('s3', aws_access_key_id=AWS['access_key'], aws_secret_access_key=AWS['secret_access_key'])
 
     try:
         s3.upload_file(local_file_name, bucket, remote_file_name)
