@@ -5,6 +5,8 @@ import os
 from mysql.connector import MySQLConnection, Error
 from config import Config
 
+from uuid import uuid4
+
 DB = Config('config.ini', 'mysql').parse()
 AWS = Config('config.ini', 'aws').parse()
 
@@ -13,7 +15,7 @@ def upload_image_to_aws(local_file_name: str, remote_file_name: str, bucket: str
     s3 = boto3.client('s3', aws_access_key_id=AWS['access_key'], aws_secret_access_key=AWS['secret_access_key'])
 
     try:
-        s3.upload_file(local_file_name, bucket, remote_file_name)
+        s3.upload_file(local_file_name, bucket, 'logs/{}'.format(remote_file_name))
         print('Upload Successful')
         return True
     except FileNotFoundError:
@@ -32,14 +34,17 @@ def insert_log_database(student_id: int, camera_id: int, mask: int, date: str, t
     INSERT INTO Checkin_log(student_id, camera_id, mask, date, time, image)
     VALUES (%s, %s, %s, %s, %s, %s)
     """
-    args = (student_id, camera_id, mask, date, time, image)
+    img_ext = image.split('.')[-1]
+    img_name = '{}.{}'.format(uuid4().hex, img_ext)
+    args = (student_id, camera_id, mask, date, time, 'logs/{}'.format(img_name))
     try:
         conn = MySQLConnection(**DB)
         cursor = conn.cursor()
         cursor.execute(query, args)
         conn.commit()
 
-        upload_image_to_aws(image, image)
+        upload_image_to_aws(image, img_name)
+        print(img_name)
 
     except Error as e:
         print(e)
