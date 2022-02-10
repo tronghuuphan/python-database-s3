@@ -75,5 +75,3 @@ def get_image_to_train():
     if data_loaded:
         return 1
     return 0
-
-print(get_image_to_train())
