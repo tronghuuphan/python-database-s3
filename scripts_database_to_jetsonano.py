@@ -8,7 +8,7 @@ from config import Config
 DB = Config('config.ini', 'mysql').parse()
 
 BASE_ROOT = os.getcwd()
-TRAIN_FOLDER = os.path.join(BASE_ROOT, 'train_images')
+TRAIN_FOLDER = os.path.join(BASE_ROOT, 'images')
 
 
 def get_image_to_train():
@@ -36,6 +36,10 @@ def get_image_to_train():
 
         # Download image from S3
         while row is not None:
+            STUDENT_FOLDER = os.path.join(TRAIN_FOLDER, row[0])
+            if not os.path.exists(STUDENT_FOLDER):
+                os.mkdir(STUDENT_FOLDER)
+            os.chdir(STUDENT_FOLDER)
             img_ext = row[1].split('.')[-1]
             img_name = '{}.{}'.format(row[0], img_ext)
             url = url_prefix + str(row[1])
@@ -47,6 +51,7 @@ def get_image_to_train():
                 with open(img_name, 'wb') as file:
                     shutil.copyfileobj(r.raw, file)
                 print('Image saved to {}'.format(img_name))
+            os.chdir(TRAIN_FOLDER)
             data_loaded.append(str(row[0]))
             row = cursor.fetchone()
         # Update trained field status
