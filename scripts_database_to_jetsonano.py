@@ -71,3 +71,9 @@ def get_image_to_train():
         cursor.close()
         conn.close()
         os.chdir(BASE_ROOT)
+
+    if data_loaded:
+        return 1
+    return 0
+
+print(get_image_to_train())
