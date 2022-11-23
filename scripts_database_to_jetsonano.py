@@ -18,7 +18,7 @@ def get_image_to_train():
     os.chdir(TRAIN_FOLDER)
 
     # S3 URL
-    url_prefix = 'https://nckh-2022.s3.ap-southeast-1.amazonaws.com/'
+    url_prefix = 'https://do-an-tot-nghiep.s3.ap-southeast-1.amazonaws.com/'
 
     # Query student's data which wasn't trained
     query = """
